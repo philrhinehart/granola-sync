@@ -30,6 +30,7 @@ clean:
 setup:
 	brew install golangci-lint || brew upgrade golangci-lint
 	go install gotest.tools/gotestsum@latest
+	go install golang.org/x/tools/cmd/deadcode@latest
 	git config core.hooksPath scripts/hooks
 	@echo "$(GREEN)$(CHECKMARK) Setup complete$(RESET)"
 
@@ -45,8 +46,9 @@ test_unit: require-gotestsum
 
 # Run linter with auto-fix
 .PHONY: lint
-lint: require-golangci-lint
+lint: require-golangci-lint require-deadcode
 	golangci-lint run --fix ./...
+	deadcode ./...
 
 # Run formatter
 .PHONY: fmt
@@ -71,3 +73,7 @@ require-gotestsum:
 .PHONY: require-golangci-lint
 require-golangci-lint:
 	@which golangci-lint > /dev/null || (echo "golangci-lint not found. Run: make setup" && exit 1)
+
+.PHONY: require-deadcode
+require-deadcode:
+	@which deadcode > /dev/null || (echo "deadcode not found. Run: make setup" && exit 1)

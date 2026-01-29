@@ -2,9 +2,12 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
+	"os/signal"
 
 	"github.com/spf13/cobra"
 
@@ -20,14 +23,6 @@ func newStartCmd() *cobra.Command {
 	}
 }
 
-func newStopCmd() *cobra.Command {
-	return &cobra.Command{
-		Use:   "stop",
-		Short: "Stop the launchd service",
-		RunE:  runStop,
-	}
-}
-
 func newStatusCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "status",
@@ -37,11 +32,13 @@ func newStatusCmd() *cobra.Command {
 }
 
 func newLogsCmd() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "logs",
 		Short: "Tail the service logs",
 		RunE:  runLogs,
 	}
+	cmd.Flags().BoolP("follow", "f", false, "Follow log output (like tail -f)")
+	return cmd
 }
 
 func newUnloadCmd() *cobra.Command {
@@ -53,28 +50,31 @@ func newUnloadCmd() *cobra.Command {
 }
 
 func runStart(cmd *cobra.Command, args []string) error {
-	fmt.Println("Installing and starting granola-sync service...")
+	// Check if already running to show appropriate message
+	status, _ := service.GetStatus()
+	wasRunning := status != nil && status.Running
+
+	if wasRunning {
+		fmt.Println("Restarting granola-sync service...")
+	} else {
+		fmt.Println("Installing and starting granola-sync service...")
+	}
 
 	if err := service.Install(); err != nil {
 		return fmt.Errorf("installing service: %w", err)
 	}
 
-	fmt.Println("Service installed and started successfully!")
+	if wasRunning {
+		fmt.Println("Service restarted successfully!")
+	} else {
+		fmt.Println("Service installed and started successfully!")
+	}
 	fmt.Println("")
 	fmt.Println("Commands:")
 	fmt.Println("  granola-sync status  - Check service status")
 	fmt.Println("  granola-sync logs    - View service logs")
-	fmt.Println("  granola-sync stop    - Stop the service")
-	fmt.Println("  granola-sync unload  - Remove the service")
+	fmt.Println("  granola-sync unload  - Stop and remove the service")
 
-	return nil
-}
-
-func runStop(cmd *cobra.Command, args []string) error {
-	if err := service.Stop(); err != nil {
-		return fmt.Errorf("stopping service: %w", err)
-	}
-	fmt.Println("Service stopped.")
 	return nil
 }
 
@@ -101,6 +101,24 @@ func runStatus(cmd *cobra.Command, args []string) error {
 func runLogs(cmd *cobra.Command, args []string) error {
 	logPath, err := service.LogPath()
 	if err != nil {
+		return err
+	}
+
+	follow, _ := cmd.Flags().GetBool("follow")
+
+	if follow {
+		// Use tail -f to follow the log file with signal handling for graceful cancellation
+		ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+		defer cancel()
+
+		tailCmd := exec.CommandContext(ctx, "tail", "-f", logPath)
+		tailCmd.Stdout = os.Stdout
+		tailCmd.Stderr = os.Stderr
+		err := tailCmd.Run()
+		// Don't treat context cancellation (Ctrl+C) as an error
+		if ctx.Err() == context.Canceled {
+			return nil
+		}
 		return err
 	}
 
@@ -138,7 +156,7 @@ func runLogs(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Printf("\n--- Log file: %s ---\n", logPath)
-	fmt.Println("Use 'tail -f' for live updates: tail -f", logPath)
+	fmt.Println("Use 'granola-sync logs -f' for live updates")
 
 	return nil
 }

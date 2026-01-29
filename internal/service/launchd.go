@@ -114,24 +114,6 @@ func Unload() error {
 	return nil
 }
 
-// Start starts the service.
-func Start() error {
-	cmd := exec.Command("launchctl", "start", ServiceLabel)
-	if output, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("starting service: %s: %w", string(output), err)
-	}
-	return nil
-}
-
-// Stop stops the service.
-func Stop() error {
-	cmd := exec.Command("launchctl", "stop", ServiceLabel)
-	if output, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("stopping service: %s: %w", string(output), err)
-	}
-	return nil
-}
-
 // Status represents the service status.
 type Status struct {
 	Running bool

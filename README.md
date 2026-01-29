@@ -64,24 +64,19 @@ Flags:
 
 ## Configuration
 
+Use `granola-sync config init` to run the interactive setup wizard, or `granola-sync config <key> <value>` to set individual values.
+
 Config file location: `~/.config/granola-sync/config.yaml`
 
-```yaml
-# Required: path to your Logseq graph
-logseq_base_path: ~/Library/Mobile Documents/iCloud~com~logseq~logseq/Documents/YourGraph
-
-# Required: your email (to identify you in meeting participants)
-user_email: your@email.com
-
-# Required: your display name for journal entries
-user_name: Your Name
-
-# Optional: custom path to Granola cache (auto-detected by default)
-# granola_cache_path: ~/Library/Application Support/Granola/cache.db
-
-# Optional: debounce time in seconds (default: 2)
-# debounce_seconds: 2
-```
+| Option | Description | Default |
+|--------|-------------|---------|
+| `logseq_base_path` | Path to your Logseq graph | (required) |
+| `user_email` | Your email to identify you in meeting participants | (required) |
+| `user_name` | Your display name for journal entries | (required) |
+| `granola_cache_path` | Path to Granola's cache file | Auto-detected |
+| `debounce_seconds` | Wait time for changes to settle before processing | `5` |
+| `min_age_seconds` | Minimum note age before syncing (prevents syncing incomplete notes during meetings) | `60` |
+| `log_level` | Logging verbosity (`debug`, `info`, `warn`, `error`) | `info` |
 
 ## Development
 

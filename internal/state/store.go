@@ -83,25 +83,6 @@ func (s *Store) MarkSynced(doc *SyncedDocument) error {
 	return err
 }
 
-// GetAllSyncedIDs returns all synced document IDs
-func (s *Store) GetAllSyncedIDs() (map[string]bool, error) {
-	rows, err := s.db.Query("SELECT id FROM synced_documents")
-	if err != nil {
-		return nil, err
-	}
-	defer func() { _ = rows.Close() }()
-
-	ids := make(map[string]bool)
-	for rows.Next() {
-		var id string
-		if err := rows.Scan(&id); err != nil {
-			return nil, err
-		}
-		ids[id] = true
-	}
-	return ids, rows.Err()
-}
-
 // NeedsUpdate checks if a document needs to be re-synced
 func (s *Store) NeedsUpdate(id string, currentUpdatedAt time.Time, contentHash string) (bool, error) {
 	doc, err := s.GetSyncedDocument(id)
@@ -125,16 +106,6 @@ func (s *Store) NeedsUpdate(id string, currentUpdatedAt time.Time, contentHash s
 	}
 
 	return false, nil
-}
-
-// HasJournalEntry checks if a journal entry already exists for a document
-// This is tracked via the logseq_page_path field being non-empty
-func (s *Store) HasJournalEntry(id string) (bool, error) {
-	doc, err := s.GetSyncedDocument(id)
-	if err != nil {
-		return false, err
-	}
-	return doc != nil && doc.LogseqPagePath != "", nil
 }
 
 func (s *Store) migrate() error {

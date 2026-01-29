@@ -21,12 +21,12 @@ func (s *FormatSuite) TestMeetingTag() {
 		want  string
 	}{
 		{"simple", "Standup", "Standup"},
-		{"removes day suffix", "Nova War Room (Tuesday)", "Nova War Room"},
-		{"removes another day suffix", "Nova War Room (Thursday)", "Nova War Room"},
+		{"removes day suffix", "Project Review (Tuesday)", "Project Review"},
+		{"removes another day suffix", "Project Review (Thursday)", "Project Review"},
 		{"removes day suffix with dash", "Weekly Sync - Monday", "Weekly Sync"},
 		{"removes date suffix", "Team Meeting 2024-01-15", "Team Meeting"},
-		{"keeps exclamation", "AngelList All Hands!", "AngelList All Hands!"},
-		{"keeps slash", "Phil / Ashok", "Phil / Ashok"},
+		{"keeps exclamation", "Company All Hands!", "Company All Hands!"},
+		{"keeps slash", "Alice / Carol", "Alice / Carol"},
 		{"handles empty", "", ""},
 	}
 
@@ -48,44 +48,44 @@ func (s *FormatSuite) TestMarkUserTodos() {
 		{
 			name: "marks user action item with TODO",
 			content: `		- **Action Items**
-		- Tibi: Complete console PR
-		- Phil: Continue investigating Nova 404 errors
-		- Ashok: Test something`,
-			userName: "Phil",
+		- Bob: Review the proposal
+		- Alice: Update the documentation
+		- Carol: Schedule follow-up meeting`,
+			userName: "Alice",
 			want: `		- **Action Items**
-		- Tibi: Complete console PR
-		- TODO Phil: Continue investigating Nova 404 errors
-		- Ashok: Test something`,
+		- Bob: Review the proposal
+		- TODO Alice: Update the documentation
+		- Carol: Schedule follow-up meeting`,
 		},
 		{
 			name: "does not mark other users",
 			content: `		- **Action Items**
-		- Tibi: Complete console PR
-		- Ashok: Test something`,
-			userName: "Phil",
+		- Bob: Review the proposal
+		- Carol: Schedule follow-up meeting`,
+			userName: "Alice",
 			want: `		- **Action Items**
-		- Tibi: Complete console PR
-		- Ashok: Test something`,
+		- Bob: Review the proposal
+		- Carol: Schedule follow-up meeting`,
 		},
 		{
 			name: "handles empty userName",
 			content: `		- **Action Items**
-		- Phil: Do something`,
+		- Alice: Do something`,
 			userName: "",
 			want: `		- **Action Items**
-		- Phil: Do something`,
+		- Alice: Do something`,
 		},
 		{
 			name: "stops at next heading",
 			content: `		- **Action Items**
-		- Phil: First item
+		- Alice: First item
 		- **Next Section**
-		- Phil: Should not be marked`,
-			userName: "Phil",
+		- Alice: Should not be marked`,
+			userName: "Alice",
 			want: `		- **Action Items**
-		- TODO Phil: First item
+		- TODO Alice: First item
 		- **Next Section**
-		- Phil: Should not be marked`,
+		- Alice: Should not be marked`,
 		},
 	}
 

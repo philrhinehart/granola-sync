@@ -16,7 +16,6 @@ func main() {
 	rootCmd.AddCommand(
 		newRunCmd(),
 		newStartCmd(),
-		newStopCmd(),
 		newStatusCmd(),
 		newLogsCmd(),
 		newUnloadCmd(),

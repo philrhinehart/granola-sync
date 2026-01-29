@@ -1,0 +1,4 @@
+{
+  "cache": "{\"state\":{\"documents\":{\"doc-1\":{\"id\":\"doc-1\",\"title\":\"Test Meeting\",\"created_at\":\"2024-01-15T10:00:00Z\",\"updated_at\":\"2024-01-15T11:00:00Z\",\"type\":\"meeting\"}},\"documentPanels\":{\"doc-1\":{\"panel-1\":{\"id\":\"panel-1\",\"document_id\":\"doc-1\",\"title\":\"Summary\",\"content\":{\"content\":[{\"type\":\"paragraph\",\"content\":[{\"text\":\"Meeting summary content here\"}]}]}}}}}}",
+  "version": 3
+}

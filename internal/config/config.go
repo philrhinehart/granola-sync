@@ -24,12 +24,62 @@ func DefaultConfig() *Config {
 	homeDir, _ := os.UserHomeDir()
 	return &Config{
 		GranolaCachePath: filepath.Join(homeDir, "Library", "Application Support", "Granola", "cache-v3.json"),
-		LogseqBasePath:   filepath.Join(homeDir, "Library", "Mobile Documents", "iCloud~com~logseq~logseq", "Documents", "AngelList"),
+		LogseqBasePath:   findLogseqGraph(homeDir),
 		StateDBPath:      filepath.Join(homeDir, ".config", "granola-sync", "state.db"),
 		DebounceSeconds:  5,
 		MinAgeSeconds:    60,
 		LogLevel:         "info",
 	}
+}
+
+// findLogseqGraph searches common locations for a Logseq graph and returns the first one found.
+// Returns empty string if no graph is found (user must configure manually).
+func findLogseqGraph(homeDir string) string {
+	// Common Logseq graph locations to check
+	candidates := []string{
+		filepath.Join(homeDir, "Documents", "logseq"),
+		filepath.Join(homeDir, "logseq"),
+		filepath.Join(homeDir, "Documents", "Logseq"),
+		filepath.Join(homeDir, "Logseq"),
+	}
+
+	// Check iCloud location - may have multiple graphs as subdirectories
+	icloudBase := filepath.Join(homeDir, "Library", "Mobile Documents", "iCloud~com~logseq~logseq", "Documents")
+	if entries, err := os.ReadDir(icloudBase); err == nil {
+		for _, entry := range entries {
+			if entry.IsDir() {
+				candidates = append(candidates, filepath.Join(icloudBase, entry.Name()))
+			}
+		}
+	}
+
+	for _, path := range candidates {
+		if isLogseqGraph(path) {
+			return path
+		}
+	}
+
+	return "" // No graph found, user must configure
+}
+
+// isLogseqGraph checks if a directory appears to be a Logseq graph
+// by looking for characteristic subdirectories (pages/, journals/, or logseq/).
+func isLogseqGraph(path string) bool {
+	info, err := os.Stat(path)
+	if err != nil || !info.IsDir() {
+		return false
+	}
+
+	// A Logseq graph typically has at least one of these directories
+	markers := []string{"pages", "journals", "logseq"}
+	for _, marker := range markers {
+		markerPath := filepath.Join(path, marker)
+		if info, err := os.Stat(markerPath); err == nil && info.IsDir() {
+			return true
+		}
+	}
+
+	return false
 }
 
 func Load(path string) (*Config, error) {
@@ -183,18 +233,4 @@ func (c *Config) Set(key, value string) error {
 		return fmt.Errorf("unknown config key: %s", key)
 	}
 	return nil
-}
-
-// ValidKeys returns all valid config key names
-func ValidKeys() []string {
-	return []string{
-		"granola_cache_path",
-		"logseq_base_path",
-		"state_db_path",
-		"debounce_seconds",
-		"min_age_seconds",
-		"log_level",
-		"user_email",
-		"user_name",
-	}
 }
