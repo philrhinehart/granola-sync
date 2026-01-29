@@ -7,7 +7,7 @@
 
     <key>ProgramArguments</key>
     <array>
-        <string>/usr/local/bin/granola-sync</string>
+        <string>__BINARY_PATH__</string>
     </array>
 
     <key>RunAtLoad</key>

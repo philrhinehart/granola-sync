@@ -5,7 +5,8 @@ CHECKMARK=✓
 
 BINARY_NAME=granola-sync
 BUILD_DIR=./build
-INSTALL_PATH=/usr/local/bin/$(BINARY_NAME)
+GOBIN=$(shell go env GOPATH)/bin
+INSTALL_PATH=$(GOBIN)/$(BINARY_NAME)
 
 # Build the binary
 .PHONY: build
@@ -13,15 +14,14 @@ build:
 	@mkdir -p $(BUILD_DIR)
 	go build -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/granola-sync
 
-# Install everything (requires sudo for binary installation)
+# Install everything
 .PHONY: install
-install: build install-binary install-service
+install: install-binary install-service
 
-# Install just the binary (requires sudo)
+# Install just the binary using go install
 .PHONY: install-binary
 install-binary:
-	sudo cp $(BUILD_DIR)/$(BINARY_NAME) $(INSTALL_PATH)
-	sudo chmod +x $(INSTALL_PATH)
+	go install ./cmd/granola-sync
 	@echo "Binary installed to $(INSTALL_PATH)"
 
 # Install and load the launchd service
@@ -30,12 +30,17 @@ install-service:
 	./scripts/install.sh
 
 # Uninstall the service
-.PHONY: uninstall
-uninstall:
+.PHONY: uninstall-service
+uninstall-service:
 	-launchctl unload ~/Library/LaunchAgents/com.granola-sync.plist 2>/dev/null
 	-rm ~/Library/LaunchAgents/com.granola-sync.plist
-	-sudo rm $(INSTALL_PATH)
-	@echo "Uninstalled granola-sync"
+	@echo "Uninstalled granola-sync service"
+
+# Uninstall everything (service and binary)
+.PHONY: uninstall
+uninstall: uninstall-service
+	-rm $(INSTALL_PATH)
+	@echo "Uninstalled granola-sync binary"
 
 # Clean build artifacts
 .PHONY: clean

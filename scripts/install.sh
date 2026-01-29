@@ -9,11 +9,12 @@ NC='\033[0m' # No Color
 
 echo -e "${GREEN}Installing granola-sync...${NC}"
 
-# Check if binary exists
-BINARY_PATH="/usr/local/bin/granola-sync"
+# Check if binary exists in Go bin path
+GOBIN="$(go env GOPATH)/bin"
+BINARY_PATH="$GOBIN/granola-sync"
 if [ ! -f "$BINARY_PATH" ]; then
     echo -e "${RED}Error: Binary not found at $BINARY_PATH${NC}"
-    echo "Please run 'make build' first, then 'sudo make install-binary'"
+    echo "Please run 'make install-binary' first"
     exit 1
 fi
 
@@ -42,8 +43,8 @@ if launchctl list | grep -q "com.granola-sync"; then
     launchctl unload "$PLIST_DEST" 2>/dev/null || true
 fi
 
-# Expand ~ in plist paths
-sed "s|~|$HOME|g" "$PLIST_SRC" > "$PLIST_DEST"
+# Expand ~ and __BINARY_PATH__ in plist
+sed -e "s|~|$HOME|g" -e "s|__BINARY_PATH__|$BINARY_PATH|g" "$PLIST_SRC" > "$PLIST_DEST"
 echo -e "Installed plist: ${YELLOW}$PLIST_DEST${NC}"
 
 # Load the service
