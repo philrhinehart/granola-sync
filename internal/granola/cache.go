@@ -16,8 +16,8 @@ type CacheFile struct {
 // CacheState represents the inner JSON structure
 type CacheState struct {
 	State struct {
-		Documents      map[string]*Document                    `json:"documents"`
-		DocumentPanels map[string]map[string]*DocumentPanel    `json:"documentPanels"`
+		Documents      map[string]*Document                 `json:"documents"`
+		DocumentPanels map[string]map[string]*DocumentPanel `json:"documentPanels"`
 	} `json:"state"`
 }
 
@@ -99,60 +99,78 @@ func extractNodeToLogseq(node interface{}, depth int) string {
 	}
 
 	nodeType, _ := nodeMap["type"].(string)
-	var result string
 	indent := strings.Repeat("\t", depth)
 
 	switch nodeType {
 	case "heading":
-		text := extractTextFromNode(nodeMap)
-		if text != "" {
-			// Headings become bold bullets
-			result = indent + "- **" + text + "**\n"
-		}
-
+		return extractHeadingNode(nodeMap, indent)
 	case "paragraph":
-		text := extractTextFromNode(nodeMap)
-		if text != "" {
-			result = indent + "- " + text + "\n"
-		}
-
+		return extractParagraphNode(nodeMap, indent)
 	case "bulletList", "orderedList":
-		if content, ok := nodeMap["content"].([]interface{}); ok {
-			for _, child := range content {
-				result += extractNodeToLogseq(child, depth)
-			}
-		}
-
+		return extractListNode(nodeMap, depth)
 	case "listItem":
-		if content, ok := nodeMap["content"].([]interface{}); ok {
-			// First child is usually the paragraph with the item text
-			// Subsequent children are nested lists
-			for i, child := range content {
-				childMap, _ := child.(map[string]interface{})
-				childType, _ := childMap["type"].(string)
-
-				if childType == "paragraph" {
-					text := extractTextFromNode(childMap)
-					if text != "" {
-						result += indent + "- " + text + "\n"
-					}
-				} else if childType == "bulletList" || childType == "orderedList" {
-					// Nested list - increase depth
-					// If this is the only content (no paragraph before), add empty bullet
-					if i == 0 {
-						result += indent + "- \n"
-					}
-					result += extractNodeToLogseq(child, depth+1)
-				}
-			}
-		}
-
+		return extractListItemNode(nodeMap, indent, depth)
 	case "text":
 		if text, ok := nodeMap["text"].(string); ok {
-			result = text
+			return text
 		}
 	}
 
+	return ""
+}
+
+func extractHeadingNode(nodeMap map[string]interface{}, indent string) string {
+	text := extractTextFromNode(nodeMap)
+	if text != "" {
+		return indent + "- **" + text + "**\n"
+	}
+	return ""
+}
+
+func extractParagraphNode(nodeMap map[string]interface{}, indent string) string {
+	text := extractTextFromNode(nodeMap)
+	if text != "" {
+		return indent + "- " + text + "\n"
+	}
+	return ""
+}
+
+func extractListNode(nodeMap map[string]interface{}, depth int) string {
+	content, ok := nodeMap["content"].([]interface{})
+	if !ok {
+		return ""
+	}
+	var result string
+	for _, child := range content {
+		result += extractNodeToLogseq(child, depth)
+	}
+	return result
+}
+
+func extractListItemNode(nodeMap map[string]interface{}, indent string, depth int) string {
+	content, ok := nodeMap["content"].([]interface{})
+	if !ok {
+		return ""
+	}
+
+	var result string
+	for i, child := range content {
+		childMap, _ := child.(map[string]interface{})
+		childType, _ := childMap["type"].(string)
+
+		switch childType {
+		case "paragraph":
+			text := extractTextFromNode(childMap)
+			if text != "" {
+				result += indent + "- " + text + "\n"
+			}
+		case "bulletList", "orderedList":
+			if i == 0 {
+				result += indent + "- \n"
+			}
+			result += extractNodeToLogseq(child, depth+1)
+		}
+	}
 	return result
 }
 

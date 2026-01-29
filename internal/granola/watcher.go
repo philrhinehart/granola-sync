@@ -54,7 +54,7 @@ func (w *Watcher) Start() error {
 func (w *Watcher) Stop() {
 	close(w.stop)
 	<-w.stopped
-	w.watcher.Close()
+	_ = w.watcher.Close()
 }
 
 func (w *Watcher) run() {

@@ -102,40 +102,6 @@ func FormatJournalEntry(doc *granola.Document) string {
 	return sb.String()
 }
 
-// convertMarkdownToLogseq converts markdown to Logseq bullet format
-func convertMarkdownToLogseq(md string) string {
-	lines := strings.Split(md, "\n")
-	var sb strings.Builder
-
-	for _, line := range lines {
-		trimmed := strings.TrimSpace(line)
-		if trimmed == "" {
-			continue
-		}
-
-		// Calculate indentation from original line
-		indent := 2 // Base indent under **Notes**
-
-		// Check for existing list markers and headers
-		if strings.HasPrefix(trimmed, "- ") {
-			sb.WriteString(strings.Repeat("\t", indent) + trimmed + "\n")
-		} else if strings.HasPrefix(trimmed, "* ") {
-			sb.WriteString(strings.Repeat("\t", indent) + "- " + trimmed[2:] + "\n")
-		} else if strings.HasPrefix(trimmed, "# ") {
-			sb.WriteString(strings.Repeat("\t", indent) + "- **" + trimmed[2:] + "**\n")
-		} else if strings.HasPrefix(trimmed, "## ") {
-			sb.WriteString(strings.Repeat("\t", indent) + "- **" + trimmed[3:] + "**\n")
-		} else if strings.HasPrefix(trimmed, "### ") {
-			sb.WriteString(strings.Repeat("\t", indent) + "- **" + trimmed[4:] + "**\n")
-		} else {
-			// Regular paragraph
-			sb.WriteString(strings.Repeat("\t", indent) + "- " + trimmed + "\n")
-		}
-	}
-
-	return sb.String()
-}
-
 // convertPlainTextToLogseq converts plain text to Logseq bullet format
 func convertPlainTextToLogseq(text string) string {
 	lines := strings.Split(text, "\n")

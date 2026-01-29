@@ -1,0 +1,33 @@
+version: "2"
+
+linters:
+  enable:
+    - copyloopvar
+    - dupl
+    - durationcheck
+    - errcheck
+    - errname
+    - funcorder
+    - gocognit
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - gofumpt
+    - goimports
+
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - prefix(github.com/philrhinehart/granola-sync)
+      custom-order: true
+
+run:
+  timeout: 5m

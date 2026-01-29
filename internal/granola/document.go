@@ -40,20 +40,20 @@ type Attendee struct {
 }
 
 type People struct {
-	Title     string           `json:"title"`
-	Creator   *PersonInfo      `json:"creator"`
-	Attendees []AttendeeInfo   `json:"attendees"`
+	Title     string         `json:"title"`
+	Creator   *PersonInfo    `json:"creator"`
+	Attendees []AttendeeInfo `json:"attendees"`
 }
 
 type PersonInfo struct {
-	Name    string       `json:"name"`
-	Email   string       `json:"email"`
+	Name    string         `json:"name"`
+	Email   string         `json:"email"`
 	Details *PersonDetails `json:"details"`
 }
 
 type AttendeeInfo struct {
-	Name    string       `json:"name"`
-	Email   string       `json:"email"`
+	Name    string         `json:"name"`
+	Email   string         `json:"email"`
 	Details *PersonDetails `json:"details"`
 }
 

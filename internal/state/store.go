@@ -32,7 +32,7 @@ func NewStore(dbPath string) (*Store, error) {
 
 	store := &Store{db: db}
 	if err := store.migrate(); err != nil {
-		db.Close()
+		_ = db.Close()
 		return nil, fmt.Errorf("migrating database: %w", err)
 	}
 
@@ -42,20 +42,6 @@ func NewStore(dbPath string) (*Store, error) {
 // Close closes the database connection
 func (s *Store) Close() error {
 	return s.db.Close()
-}
-
-func (s *Store) migrate() error {
-	_, err := s.db.Exec(`
-		CREATE TABLE IF NOT EXISTS synced_documents (
-			id TEXT PRIMARY KEY,
-			title TEXT NOT NULL,
-			synced_at TIMESTAMP NOT NULL,
-			granola_updated_at TIMESTAMP,
-			logseq_page_path TEXT,
-			content_hash TEXT
-		)
-	`)
-	return err
 }
 
 // GetSyncedDocument retrieves a synced document by ID
@@ -103,7 +89,7 @@ func (s *Store) GetAllSyncedIDs() (map[string]bool, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	ids := make(map[string]bool)
 	for rows.Next() {
@@ -149,4 +135,18 @@ func (s *Store) HasJournalEntry(id string) (bool, error) {
 		return false, err
 	}
 	return doc != nil && doc.LogseqPagePath != "", nil
+}
+
+func (s *Store) migrate() error {
+	_, err := s.db.Exec(`
+		CREATE TABLE IF NOT EXISTS synced_documents (
+			id TEXT PRIMARY KEY,
+			title TEXT NOT NULL,
+			synced_at TIMESTAMP NOT NULL,
+			granola_updated_at TIMESTAMP,
+			logseq_page_path TEXT,
+			content_hash TEXT
+		)
+	`)
+	return err
 }

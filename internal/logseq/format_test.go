@@ -2,34 +2,43 @@ package logseq
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/suite"
 )
 
-func TestMeetingTag(t *testing.T) {
+type FormatSuite struct {
+	suite.Suite
+}
+
+func TestFormatSuite(t *testing.T) {
+	suite.Run(t, new(FormatSuite))
+}
+
+func (s *FormatSuite) TestMeetingTag() {
 	tests := []struct {
+		name  string
 		title string
 		want  string
 	}{
-		{"Standup", "Standup"},
-		{"Nova War Room (Tuesday)", "Nova War Room"},
-		{"Nova War Room (Thursday)", "Nova War Room"},
-		{"Weekly Sync - Monday", "Weekly Sync"},
-		{"Team Meeting 2024-01-15", "Team Meeting"},
-		{"AngelList All Hands!", "AngelList All Hands!"},
-		{"Phil / Ashok", "Phil / Ashok"},
-		{"", ""},
+		{"simple", "Standup", "Standup"},
+		{"removes day suffix", "Nova War Room (Tuesday)", "Nova War Room"},
+		{"removes another day suffix", "Nova War Room (Thursday)", "Nova War Room"},
+		{"removes day suffix with dash", "Weekly Sync - Monday", "Weekly Sync"},
+		{"removes date suffix", "Team Meeting 2024-01-15", "Team Meeting"},
+		{"keeps exclamation", "AngelList All Hands!", "AngelList All Hands!"},
+		{"keeps slash", "Phil / Ashok", "Phil / Ashok"},
+		{"handles empty", "", ""},
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.title, func(t *testing.T) {
+		s.Run(tt.name, func() {
 			got := meetingTag(tt.title)
-			if got != tt.want {
-				t.Errorf("meetingTag(%q) = %q, want %q", tt.title, got, tt.want)
-			}
+			s.Equal(tt.want, got)
 		})
 	}
 }
 
-func TestMarkUserTodos(t *testing.T) {
+func (s *FormatSuite) TestMarkUserTodos() {
 	tests := []struct {
 		name     string
 		content  string
@@ -81,11 +90,9 @@ func TestMarkUserTodos(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		s.Run(tt.name, func() {
 			got := MarkUserTodos(tt.content, tt.userName)
-			if got != tt.want {
-				t.Errorf("MarkUserTodos() =\n%q\nwant:\n%q", got, tt.want)
-			}
+			s.Equal(tt.want, got)
 		})
 	}
 }

@@ -1,0 +1,16 @@
+#!/bin/bash
+# Pre-commit hook to format and lint Go code
+
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+echo "Running linter..."
+if make lint; then
+  echo -e "${GREEN}✓${NC} Linter passed"
+else
+  echo -e "${RED}✗${NC} Linter failed"
+  exit 1
+fi
+
+exit 0

@@ -77,18 +77,18 @@ func expandPath(path string) string {
 func (c *Config) EnsureDirectories() error {
 	// Ensure state directory exists
 	stateDir := filepath.Dir(c.StateDBPath)
-	if err := os.MkdirAll(stateDir, 0755); err != nil {
+	if err := os.MkdirAll(stateDir, 0o755); err != nil {
 		return fmt.Errorf("creating state directory: %w", err)
 	}
 
 	// Ensure logseq pages and journals directories exist
 	pagesDir := filepath.Join(c.LogseqBasePath, "pages")
-	if err := os.MkdirAll(pagesDir, 0755); err != nil {
+	if err := os.MkdirAll(pagesDir, 0o755); err != nil {
 		return fmt.Errorf("creating pages directory: %w", err)
 	}
 
 	journalsDir := filepath.Join(c.LogseqBasePath, "journals")
-	if err := os.MkdirAll(journalsDir, 0755); err != nil {
+	if err := os.MkdirAll(journalsDir, 0o755); err != nil {
 		return fmt.Errorf("creating journals directory: %w", err)
 	}
 

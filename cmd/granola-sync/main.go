@@ -17,11 +17,11 @@ import (
 )
 
 var (
-	cfgPath   string
-	backfill  bool
-	sinceStr  string
-	dryRun    bool
-	verbose   bool
+	cfgPath  string
+	backfill bool
+	sinceStr string
+	dryRun   bool
+	verbose  bool
 )
 
 func main() {
@@ -77,7 +77,7 @@ func run(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("opening state store: %w", err)
 	}
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 
 	syncer := sync.NewSyncer(cfg, store)
 

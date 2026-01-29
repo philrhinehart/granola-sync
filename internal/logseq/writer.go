@@ -28,7 +28,7 @@ func (w *Writer) WriteMeetingPage(doc *granola.Document) (string, error) {
 	content := FormatMeetingPage(doc)
 	content = MarkUserTodos(content, w.userName)
 
-	if err := os.WriteFile(pagePath, []byte(content), 0644); err != nil {
+	if err := os.WriteFile(pagePath, []byte(content), 0o644); err != nil {
 		return "", fmt.Errorf("writing meeting page: %w", err)
 	}
 
@@ -72,7 +72,7 @@ func (w *Writer) AppendJournalEntry(doc *granola.Document) (bool, error) {
 		}
 	}
 
-	if err := os.WriteFile(journalPath, []byte(newContent), 0644); err != nil {
+	if err := os.WriteFile(journalPath, []byte(newContent), 0o644); err != nil {
 		return false, fmt.Errorf("writing journal: %w", err)
 	}
 

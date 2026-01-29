@@ -10,6 +10,10 @@
 *.test
 *.out
 
+# Test artifacts
+coverage.out
+junit.xml
+
 # IDE
 .idea/
 .vscode/
