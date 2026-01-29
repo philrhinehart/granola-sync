@@ -20,13 +20,8 @@ This tool reads from Granola's local SQLite cache file. **This is an unofficial 
 # Install
 go install github.com/philrhinehart/granola-sync/cmd/granola-sync@latest
 
-# Create config file
-mkdir -p ~/.config/granola-sync
-cat > ~/.config/granola-sync/config.yaml << 'EOF'
-logseq_base_path: ~/Library/Mobile Documents/iCloud~com~logseq~logseq/Documents/YourGraph
-user_email: your@email.com
-user_name: Your Name
-EOF
+# Configure (interactive wizard)
+granola-sync config init
 
 # Start as background service
 granola-sync start
@@ -41,6 +36,11 @@ granola-sync logs
 ## Commands
 
 ```
+granola-sync config              # Show all config values
+granola-sync config <key>        # Get a specific value
+granola-sync config <key> <val>  # Set a value
+granola-sync config init         # Interactive setup wizard
+
 granola-sync run       # Watch mode (foreground)
 granola-sync start     # Install and start launchd service
 granola-sync stop      # Stop the launchd service

@@ -94,3 +94,107 @@ func (c *Config) EnsureDirectories() error {
 
 	return nil
 }
+
+// ConfigPath returns the default config file path
+func ConfigPath() string {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return ""
+	}
+	return filepath.Join(homeDir, ".config", "granola-sync", "config.yaml")
+}
+
+// Save writes the config to the specified path
+func (c *Config) Save(path string) error {
+	if path == "" {
+		path = ConfigPath()
+	}
+
+	// Ensure directory exists
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return fmt.Errorf("creating config directory: %w", err)
+	}
+
+	data, err := yaml.Marshal(c)
+	if err != nil {
+		return fmt.Errorf("marshaling config: %w", err)
+	}
+
+	if err := os.WriteFile(path, data, 0o644); err != nil {
+		return fmt.Errorf("writing config file: %w", err)
+	}
+
+	return nil
+}
+
+// Get returns a config value by key name
+func (c *Config) Get(key string) (string, error) {
+	switch key {
+	case "granola_cache_path":
+		return c.GranolaCachePath, nil
+	case "logseq_base_path":
+		return c.LogseqBasePath, nil
+	case "state_db_path":
+		return c.StateDBPath, nil
+	case "debounce_seconds":
+		return fmt.Sprintf("%d", c.DebounceSeconds), nil
+	case "min_age_seconds":
+		return fmt.Sprintf("%d", c.MinAgeSeconds), nil
+	case "log_level":
+		return c.LogLevel, nil
+	case "user_email":
+		return c.UserEmail, nil
+	case "user_name":
+		return c.UserName, nil
+	default:
+		return "", fmt.Errorf("unknown config key: %s", key)
+	}
+}
+
+// Set sets a config value by key name
+func (c *Config) Set(key, value string) error {
+	switch key {
+	case "granola_cache_path":
+		c.GranolaCachePath = expandPath(value)
+	case "logseq_base_path":
+		c.LogseqBasePath = expandPath(value)
+	case "state_db_path":
+		c.StateDBPath = expandPath(value)
+	case "debounce_seconds":
+		var v int
+		if _, err := fmt.Sscanf(value, "%d", &v); err != nil {
+			return fmt.Errorf("invalid value for debounce_seconds: %w", err)
+		}
+		c.DebounceSeconds = v
+	case "min_age_seconds":
+		var v int
+		if _, err := fmt.Sscanf(value, "%d", &v); err != nil {
+			return fmt.Errorf("invalid value for min_age_seconds: %w", err)
+		}
+		c.MinAgeSeconds = v
+	case "log_level":
+		c.LogLevel = value
+	case "user_email":
+		c.UserEmail = value
+	case "user_name":
+		c.UserName = value
+	default:
+		return fmt.Errorf("unknown config key: %s", key)
+	}
+	return nil
+}
+
+// ValidKeys returns all valid config key names
+func ValidKeys() []string {
+	return []string{
+		"granola_cache_path",
+		"logseq_base_path",
+		"state_db_path",
+		"debounce_seconds",
+		"min_age_seconds",
+		"log_level",
+		"user_email",
+		"user_name",
+	}
+}

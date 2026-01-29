@@ -156,7 +156,7 @@ func GetStatus() (*Status, error) {
 					Running: fields[0] != "-",
 				}
 				if status.Running {
-					fmt.Sscanf(fields[0], "%d", &status.PID)
+					_, _ = fmt.Sscanf(fields[0], "%d", &status.PID)
 				}
 				return status, nil
 			}
