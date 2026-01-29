@@ -1,0 +1,19 @@
+# Granola-Sync Configuration
+
+# Path to Granola's cache file
+granola_cache_path: "~/Library/Application Support/Granola/cache-v3.json"
+
+# Base path to your Logseq graph
+logseq_base_path: "~/Library/Mobile Documents/iCloud~com~logseq~logseq/Documents/AngelList/"
+
+# Path to the state database
+state_db_path: "~/.config/granola-sync/state.db"
+
+# Debounce time in seconds before processing file changes
+debounce_seconds: 5
+
+# Minimum age of a meeting in seconds before syncing (to avoid syncing incomplete meetings)
+min_age_seconds: 60
+
+# Log level: debug, info, warn, error
+log_level: info
