@@ -74,7 +74,7 @@ Config file location: `~/.config/granola-sync/config.yaml`
 | `user_email` | Your email to identify you in meeting participants | (required) |
 | `user_name` | Your display name for journal entries | (required) |
 | `granola_cache_path` | Path to Granola's cache file | Auto-detected |
-| `debounce_seconds` | Wait time for changes to settle before processing | `5` |
+| `debounce_seconds` | Wait time for changes to settle before processing | `30` |
 | `min_age_seconds` | Minimum note age before syncing (prevents syncing incomplete notes during meetings) | `60` |
 | `log_level` | Logging verbosity (`debug`, `info`, `warn`, `error`) | `info` |
 

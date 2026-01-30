@@ -32,7 +32,7 @@ func (s *ConfigSuite) TestLoadDefaults() {
 	cfg, err := Load(filepath.Join(s.tempDir, "nonexistent.yaml"))
 	s.NoError(err)
 	s.NotNil(cfg)
-	s.Equal(5, cfg.DebounceSeconds)
+	s.Equal(30, cfg.DebounceSeconds)
 	s.Equal(60, cfg.MinAgeSeconds)
 	s.Equal("info", cfg.LogLevel)
 }

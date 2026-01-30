@@ -26,7 +26,7 @@ func DefaultConfig() *Config {
 		GranolaCachePath: filepath.Join(homeDir, "Library", "Application Support", "Granola", "cache-v3.json"),
 		LogseqBasePath:   findLogseqGraph(homeDir),
 		StateDBPath:      filepath.Join(homeDir, ".config", "granola-sync", "state.db"),
-		DebounceSeconds:  5,
+		DebounceSeconds:  30,
 		MinAgeSeconds:    60,
 		LogLevel:         "info",
 	}

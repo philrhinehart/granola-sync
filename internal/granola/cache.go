@@ -23,10 +23,11 @@ type CacheState struct {
 
 // DocumentPanel represents a panel containing notes/summary for a document
 type DocumentPanel struct {
-	ID         string      `json:"id"`
-	DocumentID string      `json:"document_id"`
-	Title      string      `json:"title"`
-	Content    interface{} `json:"content"`
+	ID               string      `json:"id"`
+	DocumentID       string      `json:"document_id"`
+	Title            string      `json:"title"`
+	Content          interface{} `json:"content"`
+	ContentUpdatedAt string      `json:"content_updated_at"`
 }
 
 // ParseCache parses the double-encoded Granola cache file
@@ -54,16 +55,29 @@ func ParseCacheData(data []byte) (map[string]*Document, error) {
 	}
 
 	// Extract notes from documentPanels and populate documents
+	// Use the most recently updated Summary panel that has actual content
 	for docID, doc := range inner.State.Documents {
 		if panels, ok := inner.State.DocumentPanels[docID]; ok {
+			var bestPanel *DocumentPanel
+			var bestContent string
+			var bestTimestamp string
+
 			for _, panel := range panels {
 				if panel.Title == "Summary" && panel.Content != nil {
 					md := extractMarkdownFromContent(panel.Content)
 					if md != "" {
-						doc.NotesMarkdown = &md
+						// Use this panel if it's newer than our current best
+						if bestPanel == nil || panel.ContentUpdatedAt > bestTimestamp {
+							bestPanel = panel
+							bestContent = md
+							bestTimestamp = panel.ContentUpdatedAt
+						}
 					}
-					break
 				}
+			}
+
+			if bestContent != "" {
+				doc.NotesMarkdown = &bestContent
 			}
 		}
 	}

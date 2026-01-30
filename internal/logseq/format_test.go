@@ -79,13 +79,55 @@ func (s *FormatSuite) TestMarkUserTodos() {
 			name: "stops at next heading",
 			content: `		- **Action Items**
 		- Alice: First item
-		- **Next Section**
+		- **Other Section**
 		- Alice: Should not be marked`,
 			userName: "Alice",
 			want: `		- **Action Items**
 		- TODO Alice: First item
-		- **Next Section**
+		- **Other Section**
 		- Alice: Should not be marked`,
+		},
+		{
+			name: "handles Next Steps section",
+			content: `		- **Next Steps**
+		- Bob: Review the proposal
+		- Alice: Update the documentation`,
+			userName: "Alice",
+			want: `		- **Next Steps**
+		- Bob: Review the proposal
+		- TODO Alice: Update the documentation`,
+		},
+		{
+			name: "handles To Do section",
+			content: `		- **To Do**
+		- Alice: Complete the task`,
+			userName: "Alice",
+			want: `		- **To Do**
+		- TODO Alice: Complete the task`,
+		},
+		{
+			name: "handles Tasks section",
+			content: `		- **Tasks**
+		- Alice: Do something`,
+			userName: "Alice",
+			want: `		- **Tasks**
+		- TODO Alice: Do something`,
+		},
+		{
+			name: "handles Follow-ups section",
+			content: `		- **Follow-ups**
+		- Alice: Follow up with team`,
+			userName: "Alice",
+			want: `		- **Follow-ups**
+		- TODO Alice: Follow up with team`,
+		},
+		{
+			name: "case insensitive section matching",
+			content: `		- **next steps**
+		- Alice: Do something`,
+			userName: "Alice",
+			want: `		- **next steps**
+		- TODO Alice: Do something`,
 		},
 	}
 

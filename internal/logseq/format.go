@@ -134,6 +134,31 @@ func indentLogseqContent(content string, baseIndent int) string {
 	return sb.String()
 }
 
+// todoSectionNames contains variations of section headers that contain action items
+var todoSectionNames = []string{
+	"Action Items",
+	"Next Steps",
+	"Immediate Tasks",
+	"To Do",
+	"To-Do",
+	"TODO",
+	"Tasks",
+	"Follow-ups",
+	"Follow Ups",
+	"Followups",
+}
+
+// isTodoSectionHeader checks if a line contains a todo section header
+func isTodoSectionHeader(line string) bool {
+	lineLower := strings.ToLower(line)
+	for _, name := range todoSectionNames {
+		if strings.Contains(lineLower, strings.ToLower(name)) && strings.Contains(line, "**") {
+			return true
+		}
+	}
+	return false
+}
+
 // MarkUserTodos adds TODO markers to action items assigned to the user
 func MarkUserTodos(content string, userName string) string {
 	if userName == "" {
@@ -145,15 +170,15 @@ func MarkUserTodos(content string, userName string) string {
 	inActionItems := false
 
 	for _, line := range lines {
-		// Check if we're entering Action Items section
-		if strings.Contains(line, "**Action Items**") {
+		// Check if we're entering a todo section
+		if isTodoSectionHeader(line) {
 			inActionItems = true
 			sb.WriteString(line + "\n")
 			continue
 		}
 
-		// Check if we're leaving Action Items (new heading)
-		if inActionItems && strings.Contains(line, "**") && !strings.Contains(line, "**Action Items**") {
+		// Check if we're leaving the section (new heading)
+		if inActionItems && strings.Contains(line, "**") && !isTodoSectionHeader(line) {
 			inActionItems = false
 		}
 

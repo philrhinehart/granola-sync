@@ -133,7 +133,6 @@ func doWatch(cfg *config.Config, syncer *sync.Syncer, since *time.Time, dryRun b
 
 	// Setup file watcher
 	onChange := func() {
-		slog.Info("cache file changed, syncing")
 		result, err := syncer.Sync(since, dryRun)
 		if err != nil {
 			slog.Error("sync failed", "error", err)
