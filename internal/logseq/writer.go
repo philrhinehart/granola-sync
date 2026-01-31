@@ -48,10 +48,7 @@ func (w *Writer) AppendJournalEntry(doc *granola.Document) (bool, error) {
 	}
 
 	// Check if entry already exists
-	meetingDate := doc.GetMeetingDate()
-	dateStr := meetingDate.Format("2006-01-02")
-	pageName := fmt.Sprintf("meetings/%s %s", dateStr, sanitizeTitle(doc.Title))
-
+	pageName := GetPageName(doc)
 	if strings.Contains(string(existingContent), pageName) {
 		return false, nil // Entry already exists
 	}
@@ -96,10 +93,7 @@ func (w *Writer) DryRunJournalEntry(doc *granola.Document) (path, content string
 	// Check if entry already exists
 	existingContent, err := os.ReadFile(journalPath)
 	if err == nil {
-		meetingDate := doc.GetMeetingDate()
-		dateStr := meetingDate.Format("2006-01-02")
-		pageName := fmt.Sprintf("meetings/%s %s", dateStr, sanitizeTitle(doc.Title))
-		if strings.Contains(string(existingContent), pageName) {
+		if strings.Contains(string(existingContent), GetPageName(doc)) {
 			return journalPath, "", false
 		}
 	}

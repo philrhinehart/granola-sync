@@ -75,7 +75,7 @@ func (s *ConfigSuite) TestGet() {
 		{"valid_min_age", "min_age_seconds", false, false},
 		{"valid_log_level", "log_level", false, false},
 		{"valid_granola_path", "granola_cache_path", false, false},
-		{"valid_logseq_path", "logseq_base_path", false, false},
+		{"valid_logseq_path", "logseq_base_path", false, true}, // may be empty if no graph found
 		{"valid_state_path", "state_db_path", false, false},
 		{"valid_user_name", "user_name", false, true}, // user_name is empty by default
 		{"invalid_key", "unknown_key", true, false},

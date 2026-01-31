@@ -168,7 +168,7 @@ func TestSyncE2E(t *testing.T) {
 		assert.Equal(t, 0, result.UpdatedMeetings)
 
 		// Verify meeting page was created
-		pagePattern := filepath.Join(logseqDir, "pages", "meetings___2025-01-28 Team Standup.md")
+		pagePattern := filepath.Join(logseqDir, "pages", "meetings___2025-01-28___Team Standup.md")
 		matches, _ := filepath.Glob(pagePattern)
 		assert.Len(t, matches, 1, "Expected meeting page to be created")
 
@@ -210,7 +210,7 @@ func TestSyncE2E(t *testing.T) {
 		assert.Equal(t, 1, result.UpdatedMeetings)
 
 		// Verify page content was updated
-		pageContent, err := os.ReadFile(filepath.Join(logseqDir, "pages", "meetings___2025-01-28 Team Standup.md"))
+		pageContent, err := os.ReadFile(filepath.Join(logseqDir, "pages", "meetings___2025-01-28___Team Standup.md"))
 		require.NoError(t, err)
 		assert.Contains(t, string(pageContent), "Updated notes content")
 	})
@@ -234,7 +234,7 @@ func TestSyncE2E(t *testing.T) {
 		assert.Equal(t, 0, result.UpdatedMeetings)
 
 		// Verify second meeting page was created
-		page2Path := filepath.Join(logseqDir, "pages", "meetings___2025-01-28 1-1 Meeting.md")
+		page2Path := filepath.Join(logseqDir, "pages", "meetings___2025-01-28___1-1 Meeting.md")
 		_, err = os.Stat(page2Path)
 		assert.NoError(t, err, "Expected second meeting page to be created")
 
@@ -266,7 +266,7 @@ func TestSyncE2E(t *testing.T) {
 		assert.Equal(t, 0, result.UpdatedMeetings)
 
 		// Verify page was NOT created for doc3
-		page3Path := filepath.Join(logseqDir, "pages", "meetings___2025-01-28 Other Team Meeting.md")
+		page3Path := filepath.Join(logseqDir, "pages", "meetings___2025-01-28___Other Team Meeting.md")
 		_, err = os.Stat(page3Path)
 		assert.True(t, os.IsNotExist(err), "Expected page for non-attended meeting to NOT be created")
 	})
@@ -339,7 +339,7 @@ func TestSyncE2E_DeletedDocument(t *testing.T) {
 	assert.Equal(t, 0, result.UpdatedMeetings)
 
 	// Verify no page was created
-	pagePath := filepath.Join(logseqDir, "pages", "meetings___2025-01-28 Deleted Meeting.md")
+	pagePath := filepath.Join(logseqDir, "pages", "meetings___2025-01-28___Deleted Meeting.md")
 	_, err = os.Stat(pagePath)
 	assert.True(t, os.IsNotExist(err), "Expected page for deleted meeting to NOT be created")
 }
@@ -377,7 +377,7 @@ func TestSyncE2E_DryRun(t *testing.T) {
 	assert.Equal(t, 1, result.NewMeetings)
 
 	// Verify NO files were actually created
-	pagePath := filepath.Join(logseqDir, "pages", "meetings___2025-01-28 Dry Run Meeting.md")
+	pagePath := filepath.Join(logseqDir, "pages", "meetings___2025-01-28___Dry Run Meeting.md")
 	_, err = os.Stat(pagePath)
 	assert.True(t, os.IsNotExist(err), "Expected NO page to be created during dry run")
 

@@ -43,16 +43,6 @@ func findLogseqGraph(homeDir string) string {
 		filepath.Join(homeDir, "Logseq"),
 	}
 
-	// Check iCloud location - may have multiple graphs as subdirectories
-	icloudBase := filepath.Join(homeDir, "Library", "Mobile Documents", "iCloud~com~logseq~logseq", "Documents")
-	if entries, err := os.ReadDir(icloudBase); err == nil {
-		for _, entry := range entries {
-			if entry.IsDir() {
-				candidates = append(candidates, filepath.Join(icloudBase, entry.Name()))
-			}
-		}
-	}
-
 	for _, path := range candidates {
 		if isLogseqGraph(path) {
 			return path

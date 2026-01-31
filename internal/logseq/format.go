@@ -8,6 +8,30 @@ import (
 	"github.com/philrhinehart/granola-sync/internal/granola"
 )
 
+// Pre-compiled regexes for performance
+var (
+	unsafeCharsRe    = regexp.MustCompile(`[/\\:*?"<>|]`)
+	multiDashRe      = regexp.MustCompile(`-+`)
+	multiSpaceRe     = regexp.MustCompile(`\s+`)
+	emptyParensRe    = regexp.MustCompile(`\(\s*\)`)
+	parenDayRe       = regexp.MustCompile(`(?i)\s*\(\s*(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\s*\)`)
+	dateYMDRe        = regexp.MustCompile(`\s*\d{4}[-/]\d{2}[-/]\d{2}`)
+	dateMDRe         = regexp.MustCompile(`\s*\d{1,2}[-/]\d{1,2}`)
+	standaloneDayRe  = regexp.MustCompile(`(?i)\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b`)
+)
+
+// formatTimeRange formats a time range with optional timezone
+func formatTimeRange(startTime, endTime, tz string) string {
+	if startTime == "" || endTime == "" {
+		return ""
+	}
+	timeStr := fmt.Sprintf("%s - %s", startTime, endTime)
+	if tz != "" {
+		timeStr += fmt.Sprintf(" (%s)", shortTimezone(tz))
+	}
+	return timeStr
+}
+
 // FormatMeetingPage formats a Granola document as a Logseq meeting page
 func FormatMeetingPage(doc *granola.Document) string {
 	var sb strings.Builder
@@ -22,11 +46,7 @@ func FormatMeetingPage(doc *granola.Document) string {
 
 	// Properties
 	sb.WriteString(fmt.Sprintf("  meeting-date:: [[%s]]\n", dateStr))
-	if startTime != "" && endTime != "" {
-		timeStr := fmt.Sprintf("%s - %s", startTime, endTime)
-		if tz != "" {
-			timeStr += fmt.Sprintf(" (%s)", shortTimezone(tz))
-		}
+	if timeStr := formatTimeRange(startTime, endTime, tz); timeStr != "" {
 		sb.WriteString(fmt.Sprintf("  meeting-time:: %s\n", timeStr))
 	}
 	sb.WriteString(fmt.Sprintf("  granola-id:: %s\n", doc.ID))
@@ -69,23 +89,16 @@ func FormatMeetingPage(doc *granola.Document) string {
 
 // FormatJournalEntry formats a journal reference for a meeting
 func FormatJournalEntry(doc *granola.Document) string {
-	meetingDate := doc.GetMeetingDate()
-	dateStr := meetingDate.Format("2006-01-02")
 	startTime, endTime, tz := doc.GetMeetingTimeRange()
 	attendees := doc.GetAttendeeNames()
-
-	pageName := fmt.Sprintf("meetings/%s %s", dateStr, sanitizeTitle(doc.Title))
+	pageName := GetPageName(doc)
 
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("- [[%s]]\n", pageName))
 
 	// Add time and attendees on sub-bullet
 	var details []string
-	if startTime != "" && endTime != "" {
-		timeStr := fmt.Sprintf("%s - %s", startTime, endTime)
-		if tz != "" {
-			timeStr += fmt.Sprintf(" (%s)", shortTimezone(tz))
-		}
+	if timeStr := formatTimeRange(startTime, endTime, tz); timeStr != "" {
 		details = append(details, timeStr)
 	}
 	if len(attendees) > 0 {
@@ -195,24 +208,23 @@ func MarkUserTodos(content string, userName string) string {
 
 // sanitizeTitle removes characters that aren't safe for filenames
 func sanitizeTitle(title string) string {
-	// Replace slashes and other problematic chars
-	unsafe := regexp.MustCompile(`[/\\:*?"<>|]`)
-	result := unsafe.ReplaceAllString(title, "-")
+	result := unsafeCharsRe.ReplaceAllString(title, "-")
+	result = multiDashRe.ReplaceAllString(result, "-")
+	return strings.Trim(result, "- ")
+}
 
-	// Collapse multiple dashes
-	result = regexp.MustCompile(`-+`).ReplaceAllString(result, "-")
-
-	// Trim leading/trailing dashes and spaces
-	result = strings.Trim(result, "- ")
-
-	return result
+// GetPageName returns the Logseq page name for a meeting
+func GetPageName(doc *granola.Document) string {
+	meetingDate := doc.GetMeetingDate()
+	dateStr := meetingDate.Format("2006-01-02")
+	return fmt.Sprintf("meetings/%s/%s", dateStr, sanitizeTitle(doc.Title))
 }
 
 // GetPageFilename returns the filename for a meeting page
 func GetPageFilename(doc *granola.Document) string {
 	meetingDate := doc.GetMeetingDate()
 	dateStr := meetingDate.Format("2006-01-02")
-	return fmt.Sprintf("meetings___%s %s.md", dateStr, sanitizeTitle(doc.Title))
+	return fmt.Sprintf("meetings___%s___%s.md", dateStr, sanitizeTitle(doc.Title))
 }
 
 // GetJournalFilename returns the filename for a journal entry
@@ -247,30 +259,11 @@ func meetingTag(title string) string {
 		return ""
 	}
 
-	// Remove common patterns that make titles unique but aren't useful for tagging
-	tag := title
-
-	// Remove parenthetical day references like "(Tuesday)" first
-	parenDayPattern := regexp.MustCompile(`(?i)\s*\(\s*(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\s*\)`)
-	tag = parenDayPattern.ReplaceAllString(tag, "")
-
-	// Remove date patterns like "2024-01-15" or "01/15"
-	datePattern := regexp.MustCompile(`\s*\d{4}[-/]\d{2}[-/]\d{2}`)
-	tag = datePattern.ReplaceAllString(tag, "")
-	datePattern2 := regexp.MustCompile(`\s*\d{1,2}[-/]\d{1,2}`)
-	tag = datePattern2.ReplaceAllString(tag, "")
-
-	// Remove standalone day names (with word boundaries)
-	dayPattern := regexp.MustCompile(`(?i)\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b`)
-	tag = dayPattern.ReplaceAllString(tag, "")
-
-	// Remove empty parentheses
-	tag = regexp.MustCompile(`\(\s*\)`).ReplaceAllString(tag, "")
-
-	// Clean up whitespace and trailing punctuation
-	tag = strings.TrimSpace(tag)
-	tag = regexp.MustCompile(`\s+`).ReplaceAllString(tag, " ")
-	tag = strings.TrimRight(tag, " -")
-
-	return tag
+	tag := parenDayRe.ReplaceAllString(title, "")
+	tag = dateYMDRe.ReplaceAllString(tag, "")
+	tag = dateMDRe.ReplaceAllString(tag, "")
+	tag = standaloneDayRe.ReplaceAllString(tag, "")
+	tag = emptyParensRe.ReplaceAllString(tag, "")
+	tag = multiSpaceRe.ReplaceAllString(strings.TrimSpace(tag), " ")
+	return strings.TrimRight(tag, " -")
 }
