@@ -12,11 +12,15 @@ build:
 	@mkdir -p $(BUILD_DIR)
 	go build -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/granola-sync
 
-# Install the binary using go install
+# Install the binary using go install and restart service if running
 .PHONY: install
 install:
 	go install ./cmd/granola-sync
-	@echo "Installed. Run 'granola-sync start' to start the service."
+	@if launchctl list 2>/dev/null | grep -q com.granola-sync; then \
+		granola-sync start; \
+	else \
+		echo "Installed. Run 'granola-sync start' to start the service."; \
+	fi
 
 # Clean build artifacts
 .PHONY: clean
