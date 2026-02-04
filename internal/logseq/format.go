@@ -10,14 +10,14 @@ import (
 
 // Pre-compiled regexes for performance
 var (
-	unsafeCharsRe    = regexp.MustCompile(`[/\\:*?"<>|]`)
-	multiDashRe      = regexp.MustCompile(`-+`)
-	multiSpaceRe     = regexp.MustCompile(`\s+`)
-	emptyParensRe    = regexp.MustCompile(`\(\s*\)`)
-	parenDayRe       = regexp.MustCompile(`(?i)\s*\(\s*(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\s*\)`)
-	dateYMDRe        = regexp.MustCompile(`\s*\d{4}[-/]\d{2}[-/]\d{2}`)
-	dateMDRe         = regexp.MustCompile(`\s*\d{1,2}[-/]\d{1,2}`)
-	standaloneDayRe  = regexp.MustCompile(`(?i)\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b`)
+	unsafeCharsRe   = regexp.MustCompile(`[/\\:*?"<>|]`)
+	multiDashRe     = regexp.MustCompile(`-+`)
+	multiSpaceRe    = regexp.MustCompile(`\s+`)
+	emptyParensRe   = regexp.MustCompile(`\(\s*\)`)
+	parenDayRe      = regexp.MustCompile(`(?i)\s*\(\s*(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\s*\)`)
+	dateYMDRe       = regexp.MustCompile(`\s*\d{4}[-/]\d{2}[-/]\d{2}`)
+	dateMDRe        = regexp.MustCompile(`\s*\d{1,2}[-/]\d{1,2}`)
+	standaloneDayRe = regexp.MustCompile(`(?i)\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b`)
 )
 
 // formatTimeRange formats a time range with optional timezone
