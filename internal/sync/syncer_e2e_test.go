@@ -137,17 +137,19 @@ func TestSyncE2E(t *testing.T) {
 	require.NoError(t, os.MkdirAll(filepath.Join(logseqDir, "pages"), 0o755))
 	require.NoError(t, os.MkdirAll(filepath.Join(logseqDir, "journals"), 0o755))
 
-	cachePath := filepath.Join(tmpDir, "cache.json")
+	granolaDir := filepath.Join(tmpDir, "granola")
+	require.NoError(t, os.MkdirAll(granolaDir, 0o755))
+	cachePath := filepath.Join(granolaDir, "cache-v4.json")
 	stateDBPath := filepath.Join(tmpDir, "state.db")
 
 	// Create config
 	cfg := &config.Config{
-		GranolaCachePath: cachePath,
-		LogseqBasePath:   logseqDir,
-		StateDBPath:      stateDBPath,
-		UserEmail:        "test@example.com",
-		UserName:         "Test User",
-		MinAgeSeconds:    0, // Don't skip recent meetings
+		GranolaDir:     granolaDir,
+		LogseqBasePath: logseqDir,
+		StateDBPath:    stateDBPath,
+		UserEmail:      "test@example.com",
+		UserName:       "Test User",
+		MinAgeSeconds:  0, // Don't skip recent meetings
 	}
 
 	// Test 1: Initial sync with one meeting
@@ -278,16 +280,18 @@ func TestSyncE2E_DeletedDocument(t *testing.T) {
 	require.NoError(t, os.MkdirAll(filepath.Join(logseqDir, "pages"), 0o755))
 	require.NoError(t, os.MkdirAll(filepath.Join(logseqDir, "journals"), 0o755))
 
-	cachePath := filepath.Join(tmpDir, "cache.json")
+	granolaDir := filepath.Join(tmpDir, "granola")
+	require.NoError(t, os.MkdirAll(granolaDir, 0o755))
+	cachePath := filepath.Join(granolaDir, "cache-v4.json")
 	stateDBPath := filepath.Join(tmpDir, "state.db")
 
 	cfg := &config.Config{
-		GranolaCachePath: cachePath,
-		LogseqBasePath:   logseqDir,
-		StateDBPath:      stateDBPath,
-		UserEmail:        "test@example.com",
-		UserName:         "Test User",
-		MinAgeSeconds:    0,
+		GranolaDir:     granolaDir,
+		LogseqBasePath: logseqDir,
+		StateDBPath:    stateDBPath,
+		UserEmail:      "test@example.com",
+		UserName:       "Test User",
+		MinAgeSeconds:  0,
 	}
 
 	// Create a cache with a deleted document
@@ -350,16 +354,18 @@ func TestSyncE2E_DryRun(t *testing.T) {
 	require.NoError(t, os.MkdirAll(filepath.Join(logseqDir, "pages"), 0o755))
 	require.NoError(t, os.MkdirAll(filepath.Join(logseqDir, "journals"), 0o755))
 
-	cachePath := filepath.Join(tmpDir, "cache.json")
+	granolaDir := filepath.Join(tmpDir, "granola")
+	require.NoError(t, os.MkdirAll(granolaDir, 0o755))
+	cachePath := filepath.Join(granolaDir, "cache-v4.json")
 	stateDBPath := filepath.Join(tmpDir, "state.db")
 
 	cfg := &config.Config{
-		GranolaCachePath: cachePath,
-		LogseqBasePath:   logseqDir,
-		StateDBPath:      stateDBPath,
-		UserEmail:        "test@example.com",
-		UserName:         "Test User",
-		MinAgeSeconds:    0,
+		GranolaDir:     granolaDir,
+		LogseqBasePath: logseqDir,
+		StateDBPath:    stateDBPath,
+		UserEmail:      "test@example.com",
+		UserName:       "Test User",
+		MinAgeSeconds:  0,
 	}
 
 	writeCache(t, cachePath, makeCache([]testDoc{

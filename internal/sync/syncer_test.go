@@ -32,13 +32,16 @@ func (s *SyncerSuite) SetupTest() {
 	s.store, err = state.NewStore(":memory:")
 	s.Require().NoError(err)
 
+	granolaDir := filepath.Join(s.tempDir, "granola")
+	s.Require().NoError(os.MkdirAll(granolaDir, 0o755))
+
 	s.cfg = &config.Config{
-		GranolaCachePath: filepath.Join(s.tempDir, "cache.json"),
-		LogseqBasePath:   filepath.Join(s.tempDir, "logseq"),
-		StateDBPath:      ":memory:",
-		DebounceSeconds:  5,
-		MinAgeSeconds:    60,
-		UserEmail:        "test@example.com",
+		GranolaDir:      granolaDir,
+		LogseqBasePath:  filepath.Join(s.tempDir, "logseq"),
+		StateDBPath:     ":memory:",
+		DebounceSeconds: 5,
+		MinAgeSeconds:   60,
+		UserEmail:       "test@example.com",
 	}
 
 	// Create logseq directories
@@ -175,7 +178,7 @@ func (s *SyncerSuite) TestTruncate() {
 func (s *SyncerSuite) TestSyncWithEmptyCache() {
 	// Create empty cache file
 	cacheContent := `{"cache": "{\"state\":{\"documents\":{},\"documentPanels\":{}}}", "version": 3}`
-	err := os.WriteFile(s.cfg.GranolaCachePath, []byte(cacheContent), 0o644)
+	err := os.WriteFile(filepath.Join(s.cfg.GranolaDir, "cache-v4.json"), []byte(cacheContent), 0o644)
 	s.Require().NoError(err)
 
 	syncer := NewSyncer(s.cfg, s.store)
@@ -196,7 +199,7 @@ func (s *SyncerSuite) TestSyncFilteringDeleted() {
 		"cache": "{\"state\":{\"documents\":{\"deleted-doc\":{\"id\":\"deleted-doc\",\"title\":\"Deleted Meeting\",\"created_at\":\"` + now.Add(-3*time.Hour).Format(time.RFC3339) + `\",\"updated_at\":\"` + oldUpdatedAt.Format(time.RFC3339) + `\",\"deleted_at\":\"` + deletedAt.Format(time.RFC3339) + `\",\"type\":\"meeting\"}},\"documentPanels\":{}}}",
 		"version": 3
 	}`
-	err := os.WriteFile(s.cfg.GranolaCachePath, []byte(cacheContent), 0o644)
+	err := os.WriteFile(filepath.Join(s.cfg.GranolaDir, "cache-v4.json"), []byte(cacheContent), 0o644)
 	s.Require().NoError(err)
 
 	syncer := NewSyncer(s.cfg, s.store)
@@ -214,7 +217,7 @@ func (s *SyncerSuite) TestSyncFilteringNonAttendee() {
 		"cache": "{\"state\":{\"documents\":{\"other-meeting\":{\"id\":\"other-meeting\",\"title\":\"Other Meeting\",\"created_at\":\"` + oldTime + `\",\"updated_at\":\"` + oldTime + `\",\"type\":\"meeting\",\"google_calendar_event\":{\"id\":\"cal-1\",\"attendees\":[{\"email\":\"other@example.com\"}]}}},\"documentPanels\":{}}}",
 		"version": 3
 	}`
-	err := os.WriteFile(s.cfg.GranolaCachePath, []byte(cacheContent), 0o644)
+	err := os.WriteFile(filepath.Join(s.cfg.GranolaDir, "cache-v4.json"), []byte(cacheContent), 0o644)
 	s.Require().NoError(err)
 
 	syncer := NewSyncer(s.cfg, s.store)
@@ -232,7 +235,7 @@ func (s *SyncerSuite) TestSyncFilteringTooRecent() {
 		"cache": "{\"state\":{\"documents\":{\"recent-doc\":{\"id\":\"recent-doc\",\"title\":\"Recent Meeting\",\"created_at\":\"` + recentTime + `\",\"updated_at\":\"` + recentTime + `\",\"type\":\"meeting\"}},\"documentPanels\":{}}}",
 		"version": 3
 	}`
-	err := os.WriteFile(s.cfg.GranolaCachePath, []byte(cacheContent), 0o644)
+	err := os.WriteFile(filepath.Join(s.cfg.GranolaDir, "cache-v4.json"), []byte(cacheContent), 0o644)
 	s.Require().NoError(err)
 
 	syncer := NewSyncer(s.cfg, s.store)
@@ -250,7 +253,7 @@ func (s *SyncerSuite) TestSyncProcessesValidDoc() {
 		"cache": "{\"state\":{\"documents\":{\"valid-doc\":{\"id\":\"valid-doc\",\"title\":\"Valid Meeting\",\"created_at\":\"` + oldTime + `\",\"updated_at\":\"` + oldTime + `\",\"type\":\"meeting\"}},\"documentPanels\":{}}}",
 		"version": 3
 	}`
-	err := os.WriteFile(s.cfg.GranolaCachePath, []byte(cacheContent), 0o644)
+	err := os.WriteFile(filepath.Join(s.cfg.GranolaDir, "cache-v4.json"), []byte(cacheContent), 0o644)
 	s.Require().NoError(err)
 
 	syncer := NewSyncer(s.cfg, s.store)
@@ -271,7 +274,7 @@ func (s *SyncerSuite) TestSyncDryRun() {
 		"cache": "{\"state\":{\"documents\":{\"dry-run-doc\":{\"id\":\"dry-run-doc\",\"title\":\"Dry Run Meeting\",\"created_at\":\"` + oldTime + `\",\"updated_at\":\"` + oldTime + `\",\"type\":\"meeting\"}},\"documentPanels\":{}}}",
 		"version": 3
 	}`
-	err := os.WriteFile(s.cfg.GranolaCachePath, []byte(cacheContent), 0o644)
+	err := os.WriteFile(filepath.Join(s.cfg.GranolaDir, "cache-v4.json"), []byte(cacheContent), 0o644)
 	s.Require().NoError(err)
 
 	syncer := NewSyncer(s.cfg, s.store)
@@ -295,7 +298,7 @@ func (s *SyncerSuite) TestSyncWithSinceFilter() {
 		"cache": "{\"state\":{\"documents\":{\"old-doc\":{\"id\":\"old-doc\",\"title\":\"Old Meeting\",\"created_at\":\"` + oldTime.Format(time.RFC3339) + `\",\"updated_at\":\"` + oldTime.Format(time.RFC3339) + `\",\"type\":\"meeting\"},\"recent-doc\":{\"id\":\"recent-doc\",\"title\":\"Recent Meeting\",\"created_at\":\"` + recentTime.Format(time.RFC3339) + `\",\"updated_at\":\"` + recentTime.Format(time.RFC3339) + `\",\"type\":\"meeting\"}},\"documentPanels\":{}}}",
 		"version": 3
 	}`
-	err := os.WriteFile(s.cfg.GranolaCachePath, []byte(cacheContent), 0o644)
+	err := os.WriteFile(filepath.Join(s.cfg.GranolaDir, "cache-v4.json"), []byte(cacheContent), 0o644)
 	s.Require().NoError(err)
 
 	syncer := NewSyncer(s.cfg, s.store)
@@ -314,7 +317,7 @@ func (s *SyncerSuite) TestSyncSkipsAlreadySynced() {
 		"cache": "{\"state\":{\"documents\":{\"synced-doc\":{\"id\":\"synced-doc\",\"title\":\"Already Synced\",\"created_at\":\"` + oldTimeStr + `\",\"updated_at\":\"` + oldTimeStr + `\",\"type\":\"meeting\"}},\"documentPanels\":{}}}",
 		"version": 3
 	}`
-	err := os.WriteFile(s.cfg.GranolaCachePath, []byte(cacheContent), 0o644)
+	err := os.WriteFile(filepath.Join(s.cfg.GranolaDir, "cache-v4.json"), []byte(cacheContent), 0o644)
 	s.Require().NoError(err)
 
 	// Pre-sync the document with matching hash and timestamp

@@ -10,25 +10,25 @@ import (
 )
 
 type Config struct {
-	GranolaCachePath string `yaml:"granola_cache_path"`
-	LogseqBasePath   string `yaml:"logseq_base_path"`
-	StateDBPath      string `yaml:"state_db_path"`
-	DebounceSeconds  int    `yaml:"debounce_seconds"`
-	MinAgeSeconds    int    `yaml:"min_age_seconds"`
-	LogLevel         string `yaml:"log_level"`
-	UserEmail        string `yaml:"user_email"`
-	UserName         string `yaml:"user_name"`
+	GranolaDir      string `yaml:"granola_dir"`
+	LogseqBasePath  string `yaml:"logseq_base_path"`
+	StateDBPath     string `yaml:"state_db_path"`
+	DebounceSeconds int    `yaml:"debounce_seconds"`
+	MinAgeSeconds   int    `yaml:"min_age_seconds"`
+	LogLevel        string `yaml:"log_level"`
+	UserEmail       string `yaml:"user_email"`
+	UserName        string `yaml:"user_name"`
 }
 
 func DefaultConfig() *Config {
 	homeDir, _ := os.UserHomeDir()
 	return &Config{
-		GranolaCachePath: filepath.Join(homeDir, "Library", "Application Support", "Granola", "cache-v3.json"),
-		LogseqBasePath:   findLogseqGraph(homeDir),
-		StateDBPath:      filepath.Join(homeDir, ".config", "granola-sync", "state.db"),
-		DebounceSeconds:  30,
-		MinAgeSeconds:    60,
-		LogLevel:         "info",
+		GranolaDir:      filepath.Join(homeDir, "Library", "Application Support", "Granola"),
+		LogseqBasePath:  findLogseqGraph(homeDir),
+		StateDBPath:     filepath.Join(homeDir, ".config", "granola-sync", "state.db"),
+		DebounceSeconds: 30,
+		MinAgeSeconds:   60,
+		LogLevel:        "info",
 	}
 }
 
@@ -96,7 +96,7 @@ func Load(path string) (*Config, error) {
 	}
 
 	// Expand paths
-	cfg.GranolaCachePath = expandPath(cfg.GranolaCachePath)
+	cfg.GranolaDir = expandPath(cfg.GranolaDir)
 	cfg.LogseqBasePath = expandPath(cfg.LogseqBasePath)
 	cfg.StateDBPath = expandPath(cfg.StateDBPath)
 
@@ -171,8 +171,8 @@ func (c *Config) Save(path string) error {
 // Get returns a config value by key name
 func (c *Config) Get(key string) (string, error) {
 	switch key {
-	case "granola_cache_path":
-		return c.GranolaCachePath, nil
+	case "granola_dir":
+		return c.GranolaDir, nil
 	case "logseq_base_path":
 		return c.LogseqBasePath, nil
 	case "state_db_path":
@@ -195,8 +195,8 @@ func (c *Config) Get(key string) (string, error) {
 // Set sets a config value by key name
 func (c *Config) Set(key, value string) error {
 	switch key {
-	case "granola_cache_path":
-		c.GranolaCachePath = expandPath(value)
+	case "granola_dir":
+		c.GranolaDir = expandPath(value)
 	case "logseq_base_path":
 		c.LogseqBasePath = expandPath(value)
 	case "state_db_path":

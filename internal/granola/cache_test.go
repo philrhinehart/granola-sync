@@ -61,6 +61,37 @@ func (s *CacheSuite) TestParseCacheData() {
 				s.Len(docs, 0)
 			},
 		},
+		{
+			name:    "valid_cache_v4",
+			file:    "valid_cache_v4.json",
+			wantErr: false,
+			validate: func(docs map[string]*Document) {
+				s.Len(docs, 1)
+				doc, ok := docs["doc-1"]
+				s.True(ok)
+				s.Equal("Test Meeting V4", doc.Title)
+			},
+		},
+		{
+			name:    "with_notes_v4",
+			file:    "with_notes_v4.json",
+			wantErr: false,
+			validate: func(docs map[string]*Document) {
+				s.Len(docs, 1)
+				doc := docs["doc-1"]
+				s.NotNil(doc.NotesMarkdown)
+				s.Contains(*doc.NotesMarkdown, "Action Items")
+				s.Contains(*doc.NotesMarkdown, "Follow up on the proposal")
+			},
+		},
+		{
+			name:    "empty_documents_v4",
+			file:    "empty_documents_v4.json",
+			wantErr: false,
+			validate: func(docs map[string]*Document) {
+				s.Len(docs, 0)
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -171,7 +202,7 @@ func (s *CacheSuite) TestExtractMarkdownFromContent() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			result := extractMarkdownFromContent(tt.content)
+			result := ExtractMarkdownFromContent(tt.content)
 			s.Equal(tt.expected, result)
 		})
 	}

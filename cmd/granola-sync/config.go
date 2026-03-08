@@ -109,7 +109,7 @@ func runConfigInit(cmd *cobra.Command, args []string) error {
 	fmt.Println()
 
 	// Step 3: User name (with examples from Granola cache)
-	userName, err := promptUserName(scanner, cfg.GranolaCachePath)
+	userName, err := promptUserName(scanner, cfg.GranolaDir)
 	if err != nil {
 		return err
 	}
@@ -214,9 +214,9 @@ func findLogseqGraphs() []string {
 	return graphs
 }
 
-func promptUserName(scanner *bufio.Scanner, granolaPath string) (string, error) {
+func promptUserName(scanner *bufio.Scanner, granolaDir string) (string, error) {
 	// Try to get example names from Granola cache
-	examples := getExampleNamesFromGranola(granolaPath)
+	examples := getExampleNamesFromGranola(granolaDir)
 
 	if len(examples) > 0 {
 		fmt.Printf("Enter your name (e.g. %s): ", strings.Join(examples, ", "))
@@ -235,7 +235,11 @@ func promptUserName(scanner *bufio.Scanner, granolaPath string) (string, error) 
 	return name, nil
 }
 
-func getExampleNamesFromGranola(cachePath string) []string {
+func getExampleNamesFromGranola(granolaDir string) []string {
+	cachePath, err := granola.FindCacheFile(granolaDir)
+	if err != nil {
+		return nil
+	}
 	docs, err := granola.ParseCache(cachePath)
 	if err != nil {
 		return nil

@@ -1,0 +1,29 @@
+{
+  "cache": {
+    "state": {
+      "documents": {
+        "doc-1": {
+          "id": "doc-1",
+          "title": "Test Meeting V4",
+          "created_at": "2024-01-15T10:00:00Z",
+          "updated_at": "2024-01-15T11:00:00Z",
+          "type": "meeting",
+          "notes": {
+            "type": "doc",
+            "content": [
+              {
+                "type": "heading",
+                "content": [{"type": "text", "text": "Action Items"}]
+              },
+              {
+                "type": "paragraph",
+                "content": [{"type": "text", "text": "Follow up on the proposal"}]
+              }
+            ]
+          }
+        }
+      }
+    },
+    "version": 5
+  }
+}

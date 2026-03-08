@@ -74,7 +74,7 @@ func (s *ConfigSuite) TestGet() {
 		{"valid_debounce", "debounce_seconds", false, false},
 		{"valid_min_age", "min_age_seconds", false, false},
 		{"valid_log_level", "log_level", false, false},
-		{"valid_granola_path", "granola_cache_path", false, false},
+		{"valid_granola_dir", "granola_dir", false, false},
 		{"valid_logseq_path", "logseq_base_path", false, true}, // may be empty if no graph found
 		{"valid_state_path", "state_db_path", false, false},
 		{"valid_user_name", "user_name", false, true}, // user_name is empty by default
@@ -225,7 +225,7 @@ func (s *ConfigSuite) TestExpandPath() {
 func (s *ConfigSuite) TestPathExpansionOnLoad() {
 	configPath := filepath.Join(s.tempDir, "config.yaml")
 	content := `
-granola_cache_path: ~/cache.json
+granola_dir: ~/granola
 logseq_base_path: ~/logseq
 state_db_path: ~/state.db
 `
@@ -235,7 +235,7 @@ state_db_path: ~/state.db
 	s.NoError(err)
 
 	homeDir, _ := os.UserHomeDir()
-	s.Equal(filepath.Join(homeDir, "cache.json"), cfg.GranolaCachePath)
+	s.Equal(filepath.Join(homeDir, "granola"), cfg.GranolaDir)
 	s.Equal(filepath.Join(homeDir, "logseq"), cfg.LogseqBasePath)
 	s.Equal(filepath.Join(homeDir, "state.db"), cfg.StateDBPath)
 }

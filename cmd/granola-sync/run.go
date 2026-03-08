@@ -55,7 +55,7 @@ func runWatch(cmd *cobra.Command, args []string) error {
 
 	if verbose {
 		slog.Debug("config loaded",
-			"granola_cache", cfg.GranolaCachePath,
+			"granola_dir", cfg.GranolaDir,
 			"logseq_base", cfg.LogseqBasePath,
 			"state_db", cfg.StateDBPath,
 			"user_email", cfg.UserEmail,
@@ -123,7 +123,11 @@ func doBackfill(syncer *sync.Syncer, since *time.Time, dryRun bool) error {
 }
 
 func doWatch(cfg *config.Config, syncer *sync.Syncer, since *time.Time, dryRun bool) error {
-	slog.Info("starting watch mode", "path", cfg.GranolaCachePath)
+	cachePath, err := granola.FindCacheFile(cfg.GranolaDir)
+	if err != nil {
+		return fmt.Errorf("finding cache file: %w", err)
+	}
+	slog.Info("starting watch mode", "path", cachePath)
 
 	// Do initial sync
 	slog.Info("performing initial sync")
@@ -147,7 +151,7 @@ func doWatch(cfg *config.Config, syncer *sync.Syncer, since *time.Time, dryRun b
 		}
 	}
 
-	watcher, err := granola.NewWatcher(cfg.GranolaCachePath, cfg.DebounceSeconds, onChange)
+	watcher, err := granola.NewWatcher(cachePath, cfg.DebounceSeconds, onChange)
 	if err != nil {
 		return fmt.Errorf("creating watcher: %w", err)
 	}

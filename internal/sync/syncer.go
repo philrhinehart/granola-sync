@@ -1,8 +1,10 @@
 package sync
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"log/slog"
 	"sort"
@@ -13,6 +15,9 @@ import (
 	"github.com/philrhinehart/granola-sync/internal/logseq"
 	"github.com/philrhinehart/granola-sync/internal/state"
 )
+
+// apiCallDelay is the minimum time between consecutive API calls.
+const apiCallDelay = 100 * time.Millisecond
 
 // Syncer orchestrates syncing between Granola and Logseq
 type Syncer struct {
@@ -40,7 +45,14 @@ func NewSyncer(cfg *config.Config, store *state.Store) *Syncer {
 
 // Sync performs a full sync of all documents
 func (s *Syncer) Sync(since *time.Time, dryRun bool) (*SyncResult, error) {
-	docs, err := granola.ParseCache(s.cfg.GranolaCachePath)
+	// Load a fresh auth token each sync cycle
+	apiClient := s.loadAPIClient()
+
+	cachePath, err := granola.FindCacheFile(s.cfg.GranolaDir)
+	if err != nil {
+		return nil, fmt.Errorf("finding cache file: %w", err)
+	}
+	docs, err := granola.ParseCache(cachePath)
 	if err != nil {
 		return nil, fmt.Errorf("parsing cache: %w", err)
 	}
@@ -51,8 +63,11 @@ func (s *Syncer) Sync(since *time.Time, dryRun bool) (*SyncResult, error) {
 	// Sort documents by meeting date for consistent ordering
 	sortedDocs := sortDocumentsByDate(docs)
 
+	ctx := context.Background()
+	var lastAPICall time.Time
+
 	for _, doc := range sortedDocs {
-		if err := s.processDocument(doc, since, minAge, dryRun, result); err != nil {
+		if err := s.processDocument(ctx, doc, since, minAge, dryRun, &apiClient, &lastAPICall, result); err != nil {
 			slog.Error("failed to process document", "id", doc.ID, "title", doc.Title, "error", err)
 			result.Errors = append(result.Errors, fmt.Errorf("doc %s: %w", doc.ID, err))
 		}
@@ -61,7 +76,18 @@ func (s *Syncer) Sync(since *time.Time, dryRun bool) (*SyncResult, error) {
 	return result, nil
 }
 
-func (s *Syncer) processDocument(doc *granola.Document, since *time.Time, minAge time.Duration, dryRun bool, result *SyncResult) error {
+// loadAPIClient creates a fresh API client using the current auth token.
+// Returns nil (with a warning log) if the token cannot be loaded.
+func (s *Syncer) loadAPIClient() *granola.APIClient {
+	token, err := granola.LoadAuthToken(s.cfg.GranolaDir)
+	if err != nil {
+		slog.Warn("could not load Granola auth token, API panel fetching disabled", "error", err)
+		return nil
+	}
+	return granola.NewAPIClient("", token)
+}
+
+func (s *Syncer) processDocument(ctx context.Context, doc *granola.Document, since *time.Time, minAge time.Duration, dryRun bool, apiClient **granola.APIClient, lastAPICall *time.Time, result *SyncResult) error {
 	// Skip deleted documents
 	if doc.IsDeleted() {
 		slog.Debug("skipping deleted document", "id", doc.ID, "title", doc.Title)
@@ -85,6 +111,11 @@ func (s *Syncer) processDocument(doc *granola.Document, since *time.Time, minAge
 	if since != nil && meetingDate.Before(*since) {
 		slog.Debug("skipping document before since date", "id", doc.ID, "title", doc.Title, "date", meetingDate)
 		return nil
+	}
+
+	// Fetch notes from API if missing locally
+	if !doc.HasNotes() && *apiClient != nil {
+		s.fetchAndPopulateNotes(ctx, doc, apiClient, lastAPICall)
 	}
 
 	// Calculate content hash for change detection
@@ -186,6 +217,30 @@ func (s *Syncer) syncDocument(doc *granola.Document, contentHash string, isNew b
 	}
 
 	return nil
+}
+
+func (s *Syncer) fetchAndPopulateNotes(ctx context.Context, doc *granola.Document, apiClient **granola.APIClient, lastAPICall *time.Time) {
+	// Rate limit API calls
+	if elapsed := time.Since(*lastAPICall); elapsed < apiCallDelay {
+		time.Sleep(apiCallDelay - elapsed)
+	}
+	*lastAPICall = time.Now()
+
+	panels, err := (*apiClient).FetchDocumentPanels(ctx, doc.ID)
+	if err != nil {
+		if errors.Is(err, granola.ErrUnauthorized) {
+			slog.Warn("API token rejected, disabling panel fetching for this cycle")
+			*apiClient = nil
+			return
+		}
+		slog.Warn("failed to fetch panels from API", "id", doc.ID, "title", doc.Title, "error", err)
+		return
+	}
+
+	if md := granola.BestSummaryFromPanels(panels); md != "" {
+		doc.NotesMarkdown = &md
+		slog.Debug("populated notes from API", "id", doc.ID, "title", doc.Title)
+	}
 }
 
 func sortDocumentsByDate(docs map[string]*granola.Document) []*granola.Document {
